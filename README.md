@@ -12,6 +12,17 @@ Credit records contain applicant and loan attributes collected before a decision
 
 This repository is a case study on a small historical sample (1973–1975). It produces descriptive findings and a benchmark comparison, not a decision system ready for lending use.
 
+## Decision Context
+
+The model is treated as a decision-support benchmark for identifying applications that may need additional review. A score above a screening threshold would flag an application for review, not determine approval or rejection.
+
+| Screening error | Conceptual cost |
+| --- | --- |
+| False positive | A good applicant is flagged as risky, adding unnecessary manual review and possible delay. |
+| False negative | A risky applicant is classified as low risk and missed by the screening step. |
+
+This is a simulated use case for the historical labels, not a deployed lending system. No applications were reviewed through this project, and no monetary cost or lending impact is calculated. The threshold analysis makes review volume and missed outcomes visible without assigning invented financial values.
+
 ## Dataset
 
 Source: [UCI South German Credit](https://archive.ics.uci.edu/dataset/573/south+german+credit+update), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw data and code table are committed under `data/raw/`.
@@ -87,6 +98,27 @@ Random Forest ranks best by ROC-AUC but at the 0.5 threshold it catches only 20 
 
 ![Confusion matrix — top model](images/confusion_matrix.png)
 
+## Threshold Analysis
+
+The existing Random Forest supplies bad-credit probabilities for the same 200 test records (60 bad outcomes). The table flags scores **greater than or equal to** each threshold. Training settings, labels, and the original 0.5 evaluation are unchanged.
+
+| Threshold | Flagged for review | Bad outcomes captured | Good applicants flagged (FP) | Bad outcomes missed (FN) | Precision | Recall | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.20 | 150 | 55 | 95 | 5 | 0.367 | 0.917 | 0.524 |
+| 0.30 | 98 | 45 | 53 | 15 | 0.459 | 0.750 | 0.570 |
+| 0.40 | 55 | 32 | 23 | 28 | 0.582 | 0.533 | 0.557 |
+| 0.50 | 26 | 20 | 6 | 40 | 0.769 | 0.333 | 0.465 |
+| 0.60 | 4 | 4 | 0 | 56 | 1.000 | 0.067 | 0.125 |
+| 0.70 | 1 | 1 | 0 | 59 | 1.000 | 0.017 | 0.033 |
+
+![Random Forest precision–recall curve and threshold trade-off](images/threshold_analysis.png)
+
+Lowering the threshold from 0.50 to 0.30 captures 25 more bad outcomes, but flags 47 more good applicants and increases the review queue from 26 to 98. At 0.60, precision is 1.000 based on just four flags; it misses 56 of 60 bad outcomes. That small queue is not evidence of a reliable screening policy.
+
+Average precision is **0.6314** on this test set; the horizontal reference is its 0.30 bad-outcome prevalence. Average precision summarizes the precision–recall curve using recall increments, rather than selecting a particular threshold.
+
+The notebook writes full-precision counts and metrics to `reports/threshold_analysis.csv` and test scores to `reports/screening_scores.csv`. Precision is `TP / (TP + FP)`, recall is `TP / 60`, and F1 is their harmonic mean. These are descriptive test-set comparisons: no threshold is chosen or deployed. A review policy would need separate validation data, review capacity, and explicit error costs; source oversampling also limits how these probabilities transfer to a different population.
+
 ## Explainability
 
 Interpretation uses the logistic regression coefficients. Positive coefficients raise predicted risk, negative coefficients lower it, and the values are conditional on the other features after encoding and scaling.
@@ -114,6 +146,9 @@ credit-risk-analysis/
 │   └── codetable.txt                # Category definitions
 ├── images/                          # Charts written by the notebook
 ├── portfolio/                       # Three summary figures
+├── reports/
+│   ├── threshold_analysis.csv        # Threshold counts and metrics
+│   └── screening_scores.csv          # Test labels and Random Forest scores
 ├── requirements.txt
 └── README.md
 ```
@@ -136,6 +171,8 @@ jupyter nbconvert --to notebook --execute --inplace credit_risk_analysis.ipynb
 ```
 
 Execution reads `../data/raw/SouthGermanCredit.asc` and writes charts to `../images/` and summary figures to `../portfolio/`.
+
+The final three cells add the simulated screening context, threshold table, and precision–recall plot. They reuse `fitted_models["Random Forest"]` and export the two CSVs under `../reports/`. Assertions check that counts reconcile, review volume and recall decrease with the threshold, and the 0.5 flags match the original classifier predictions.
 
 ## Technical Decisions
 
