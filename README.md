@@ -1,10 +1,8 @@
 # Credit Risk Analysis
 
-An analysis of 1,000 historical credit records that identifies which recorded factors track with bad outcomes, then compares three classifiers as a held-out benchmark.
+Analyzing 1,000 historical German credit records (1973-1975) to identify factors associated with bad outcomes and compare three classification models as a held-out benchmark.
 
-`Python` · `pandas` · `scikit-learn` · `Matplotlib` · `Seaborn` · `Jupyter`
-
----
+Built with Python, pandas, scikit-learn, Matplotlib, Seaborn, and Jupyter.
 
 ## Problem
 
@@ -14,14 +12,11 @@ This repository is a case study on a small historical sample (1973–1975). It p
 
 ## Decision Context
 
-The model is treated as a decision-support benchmark for identifying applications that may need additional review. A score above a screening threshold would flag an application for review, not determine approval or rejection.
+The model serves as a decision-support benchmark for identifying applications that may need additional review. A score above a screening threshold would flag an application for review, not determine approval or rejection.
 
-| Screening error | Conceptual cost |
-| --- | --- |
-| False positive | A good applicant is flagged as risky, adding unnecessary manual review and possible delay. |
-| False negative | A risky applicant is classified as low risk and missed by the screening step. |
+A false positive means a good applicant is flagged as risky, adding unnecessary manual review and possible delay. A false negative means a risky applicant is classified as low risk and missed by the screening step.
 
-This is a simulated use case for the historical labels, not a deployed lending system. No applications were reviewed through this project, and no monetary cost or lending impact is calculated. The threshold analysis makes review volume and missed outcomes visible without assigning invented financial values.
+This is a simulated use case for the historical labels, not a deployed lending system. No applications were reviewed through this project, and no monetary cost or lending impact is calculated.
 
 ## Dataset
 
@@ -80,7 +75,7 @@ Risk by credit amount:
 
 ![Bad credit rate by credit amount quartile](images/amount_risk.png)
 
-The top amount quartile had a 42.0% bad rate, noticeably above the other three. These are associations in the sample, not causal effects.
+The top amount quartile had a 42.0% bad rate, noticeably above the other three. The relationships described here are observed associations in the historical sample.
 
 ## Modeling and Evaluation
 
@@ -125,7 +120,7 @@ Interpretation uses the logistic regression coefficients. Positive coefficients 
 
 ![Selected logistic regression coefficients](images/feature_coefficients.png)
 
-The largest effects come from checking status (no account and below 0 DM increase risk, 200+ DM decreases it), longer duration, and several credit-history categories. Correlated features share weight, so these coefficients describe direction and relative size rather than isolated effects. No SHAP or other model-agnostic method is used in this project.
+The largest effects come from checking status (no account and below 0 DM increase risk, 200+ DM decreases it), longer duration, and several credit-history categories. Correlated features share weight, so these coefficients describe direction and relative size rather than isolated effects.
 
 ## Key Findings
 
@@ -142,14 +137,20 @@ credit-risk-analysis/
 ├── notebooks/
 │   └── credit_risk_analysis.ipynb   # Cleaning, EDA, modeling, evaluation
 ├── data/raw/
-│   ├── SouthGermanCredit.asc        # Source data
+│   ├── SouthGermanCredit.asc        # Source data (UCI ML Repository, CC BY 4.0)
 │   └── codetable.txt                # Category definitions
 ├── images/                          # Charts written by the notebook
-├── portfolio/                       # Three summary figures
+├── portfolio/                       # Summary figures for quick overview
+│   ├── credit_risk_overview.png
+│   ├── key_insights.png
+│   └── model_results.png
 ├── reports/
 │   ├── threshold_analysis.csv        # Threshold counts and metrics
 │   └── screening_scores.csv          # Test labels and Random Forest scores
 ├── requirements.txt
+├── pyproject.toml                   # Ruff and pytest configuration
+├── .pre-commit-config.yaml          # Pre-commit hooks
+├── LICENSE
 └── README.md
 ```
 
@@ -184,19 +185,20 @@ The final three cells add the simulated screening context, threshold table, and 
 
 ## Limitations
 
-- The sample is small, old, and deliberately oversampled; results are not representative of a current population.
+- The sample is small, old (1973-1975), and deliberately oversampled; results are not representative of a current population.
 - There is no income variable, and the amount transformation in the source is undocumented.
 - Metrics come from a single split, and the model ranking is taken from that same test set rather than a separate validation set.
-- Category rates and coefficients are associations. Correlated features make individual coefficients hard to read in isolation.
-- No calibration or fairness analysis is included.
+- Category rates and coefficients are associations; correlated features make individual coefficients hard to read in isolation.
+- No calibration, fairness analysis, or model explainability method (SHAP, LIME) is included.
 
 ## Future Improvements
 
-- Add cross-validation and choose models on a validation set before the final test.
-- Tune the decision threshold on validation data to trade recall against precision.
-- Add probability calibration and a fairness check by group.
-- Compare against a gradient-boosting model.
-- Export a small metrics file so results are versioned alongside the notebook.
+- Implement k-fold cross-validation and use a held-out validation set for model selection before final test evaluation.
+- Tune the classification threshold on validation data to find the optimal balance between review workload and missed bad outcomes.
+- Add isotonic regression or Platt scaling for probability calibration, especially important given the source oversampling.
+- Run a fairness audit if protected attributes become available, checking for disparate impact across demographic groups.
+- Compare against modern gradient-boosting methods (XGBoost, LightGBM) and neural networks to establish a stronger baseline.
+- Extract the notebook's modeling logic into a reusable Python module with unit tests, making it easier to iterate and deploy.
 
 ## Author
 
