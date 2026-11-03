@@ -1,205 +1,99 @@
-# Credit Risk Analysis
+# Credit Risk Analysis & Prediction
 
-Analyzing 1,000 historical German credit records (1973-1975) to identify factors associated with bad outcomes and compare three classification models as a held-out benchmark.
+I built this to predict loan default risk using historical data from the UCI South German Credit dataset.
 
-Built with Python, pandas, scikit-learn, Matplotlib, Seaborn, and Jupyter.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-latest-orange.svg)](https://scikit-learn.org/)
 
-## Problem
+## Why I built this
+I wanted to know if basic categorical data—like account status and credit history—could reliably flag risky loans. I used this dataset to practice building a clean pipeline from raw, coded data to a model that provides a clear risk score.
 
-Credit records contain applicant and loan attributes collected before a decision, plus the eventual outcome of the contract. A useful analysis answers two questions: which attributes are associated with a bad outcome, and how well a simple model can rank bad outcomes above good ones.
-
-This repository is a case study on a small historical sample (1973–1975). It produces descriptive findings and a benchmark comparison, not a decision system ready for lending use.
-
-## Decision Context
-
-The model serves as a decision-support benchmark for identifying applications that may need additional review. A score above a screening threshold would flag an application for review, not determine approval or rejection.
-
-A false positive means a good applicant is flagged as risky, adding unnecessary manual review and possible delay. A false negative means a risky applicant is classified as low risk and missed by the screening step.
-
-This is a simulated use case for the historical labels, not a deployed lending system. No applications were reviewed through this project, and no monetary cost or lending impact is calculated.
-
-## Dataset
-
-Source: [UCI South German Credit](https://archive.ics.uci.edu/dataset/573/south+german+credit+update), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw data and code table are committed under `data/raw/`.
-
-| Property | Value |
-| --- | --- |
-| Records | 1,000 |
-| Columns | 21 (20 predictors + outcome) |
-| Continuous fields | `duration_months`, `credit_amount_dm`, `age_years` |
-| Coded categorical fields | 17 |
-| Outcome balance | 700 good / 300 bad |
-| Bad-outcome rate | 30% |
-| Period | 1973–1975 |
-
-Selected predictors include `checking_status`, `duration_months`, `credit_history`, `credit_amount_dm`, `savings`, and `age_years`. For evaluation, bad credit is the positive class (`bad_credit = 1`).
-
-Two properties of the source shape the interpretation: bad credits were deliberately oversampled, so 30% is not a population rate, and the credit amounts were transformed in the original data with an unpublished method. The data contain no income field.
-
-## Workflow
+## What it does
+The project takes raw credit records and transforms them into a predictive model. It maps numeric codes to readable labels, handles preprocessing via scikit-learn pipelines, and compares three different classifiers to find the best balance between precision and recall.
 
 ```mermaid
-flowchart LR
-    A[South German Credit] --> B[Cleaning and code mapping]
-    B --> C[Exploratory analysis]
-    C --> D[Preprocessing]
-    D --> E[Model training]
-    E --> F[Evaluation]
-    F --> G[Interpretation]
+graph TD
+    A[Raw Data] --> B[Column Renaming]
+    B --> C[Category Mapping]
+    C --> D[Train/Test Split]
+    D --> E[Preprocessing Pipeline]
+    E --> F[Model Training]
+    F --> G[Evaluation]
+    G --> H[Risk Insights]
 ```
 
-## Data Preparation
+## Data
+I used the UCI South German Credit dataset. It contains 1,000 records of loan applicants from the mid-1970s. The target is whether the credit was "good" or "bad."
 
-- Coded category values are checked against `codetable.txt` before any mapping, and unexpected codes raise an error rather than passing through silently.
-- Fields are renamed to readable names and category codes are converted to labels. No rows are removed.
-- Outliers are intentionally kept; large loans and long durations are plausible and could carry information.
-- The 20 predictors are used as-is, and the target is separated out.
-- An 80/20 stratified split keeps the class ratio in both sets.
-- Median imputation, most-frequent imputation, one-hot encoding, and scaling are fitted inside the model pipeline, so preprocessing never sees the test data.
-
-## Exploratory Analysis
-
-Outcome balance:
-
-![Historical credit outcomes](images/credit_outcomes.png)
-
-300 of 1,000 contracts ended badly. With a 70/30 split, accuracy alone is an unreliable measure and the analysis leans on ROC-AUC, recall, and precision.
-
-Risk by checking-account status:
-
-![Bad credit rate by checking account status](images/checking_risk.png)
-
-Checking status separates outcomes more than any other single field. Records with no checking account had the highest bad rate (49.3%); accounts at 200+ DM had the lowest (11.7%).
-
-Risk by credit amount:
-
-![Bad credit rate by credit amount quartile](images/amount_risk.png)
-
-The top amount quartile had a 42.0% bad rate, noticeably above the other three. The relationships described here are observed associations in the historical sample.
-
-## Modeling and Evaluation
-
-Three classifiers were trained with simple settings and evaluated once on a held-out set of 200 records, 60 of which are bad outcomes. The decision threshold is 0.5.
-
-| Model | Accuracy | Precision | Recall | F1 | ROC-AUC |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Random Forest | 0.770 | 0.769 | 0.333 | 0.465 | 0.755 |
-| Logistic Regression | 0.740 | 0.591 | 0.433 | 0.500 | 0.742 |
-| Decision Tree | 0.735 | 0.640 | 0.267 | 0.376 | 0.689 |
-
-Random Forest ranks best by ROC-AUC but at the 0.5 threshold it catches only 20 of the 60 bad outcomes, which is a low recall. Logistic Regression catches more (highest recall and F1) at the cost of precision. The trade-off matters because a false positive triggers an unnecessary review, while a false negative lets a bad outcome through.
-
-![Held-out model comparison](images/model_comparison.png)
-
-![Confusion matrix — top model](images/confusion_matrix.png)
-
-## Threshold Analysis
-
-The existing Random Forest supplies bad-credit probabilities for the same 200 test records (60 bad outcomes). The table flags scores **greater than or equal to** each threshold. Training settings, labels, and the original 0.5 evaluation are unchanged.
-
-| Threshold | Flagged for review | Bad outcomes captured | Good applicants flagged (FP) | Bad outcomes missed (FN) | Precision | Recall | F1 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0.20 | 150 | 55 | 95 | 5 | 0.367 | 0.917 | 0.524 |
-| 0.30 | 98 | 45 | 53 | 15 | 0.459 | 0.750 | 0.570 |
-| 0.40 | 55 | 32 | 23 | 28 | 0.582 | 0.533 | 0.557 |
-| 0.50 | 26 | 20 | 6 | 40 | 0.769 | 0.333 | 0.465 |
-| 0.60 | 4 | 4 | 0 | 56 | 1.000 | 0.067 | 0.125 |
-| 0.70 | 1 | 1 | 0 | 59 | 1.000 | 0.017 | 0.033 |
-
-![Random Forest precision–recall curve and threshold trade-off](images/threshold_analysis.png)
-
-Lowering the threshold from 0.50 to 0.30 captures 25 more bad outcomes, but flags 47 more good applicants and increases the review queue from 26 to 98. At 0.60, precision is 1.000 based on just four flags; it misses 56 of 60 bad outcomes. That small queue is not evidence of a reliable screening policy.
-
-Average precision is **0.6314** on this test set; the horizontal reference is its 0.30 bad-outcome prevalence. Average precision summarizes the precision–recall curve using recall increments, rather than selecting a particular threshold.
-
-The notebook writes full-precision counts and metrics to `reports/threshold_analysis.csv` and test scores to `reports/screening_scores.csv`. Precision is `TP / (TP + FP)`, recall is `TP / 60`, and F1 is their harmonic mean. These are descriptive test-set comparisons: no threshold is chosen or deployed. A review policy would need separate validation data, review capacity, and explicit error costs; source oversampling also limits how these probabilities transfer to a different population.
-
-## Explainability
-
-Interpretation uses the logistic regression coefficients. Positive coefficients raise predicted risk, negative coefficients lower it, and the values are conditional on the other features after encoding and scaling.
-
-![Selected logistic regression coefficients](images/feature_coefficients.png)
-
-The largest effects come from checking status (no account and below 0 DM increase risk, 200+ DM decreases it), longer duration, and several credit-history categories. Correlated features share weight, so these coefficients describe direction and relative size rather than isolated effects.
-
-## Key Findings
-
-- Checking balances below 0 DM had a 39.0% bad rate versus 11.7% for balances at 200+ DM.
-- Contracts longer than 24 months had a 44.3% bad rate versus 25.7% for shorter contracts.
-- Above-median credit amounts had a 32.2% bad rate versus 27.8% for the lower half.
-- The highest credit-amount quartile reached a 42.0% bad rate.
-- The 30% bad rate reflects deliberate oversampling and should not be read as a current rate.
+## Stack
+| Tool | Use |
+| :--- | :--- |
+| Python | Language |
+| pandas | Data manipulation |
+| scikit-learn | Preprocessing & Modeling |
+| matplotlib / seaborn | Visualization |
+| pytest | Logic validation |
 
 ## Project Structure
-
 ```text
 credit-risk-analysis/
-├── notebooks/
-│   └── credit_risk_analysis.ipynb   # Cleaning, EDA, modeling, evaluation
-├── data/raw/
-│   ├── SouthGermanCredit.asc        # Source data (UCI ML Repository, CC BY 4.0)
-│   └── codetable.txt                # Category definitions
-├── images/                          # Charts written by the notebook
-├── portfolio/                       # Summary figures for quick overview
-│   ├── credit_risk_overview.png
-│   ├── key_insights.png
-│   └── model_results.png
-├── reports/
-│   ├── threshold_analysis.csv        # Threshold counts and metrics
-│   └── screening_scores.csv          # Test labels and Random Forest scores
-├── requirements.txt
-├── pyproject.toml                   # Ruff and pytest configuration
-├── .pre-commit-config.yaml          # Pre-commit hooks
-├── LICENSE
-└── README.md
+├── data/                # Raw source files
+├── images/              # Analysis plots
+├── notebooks/           # Full research walk-through
+├── src/
+│   └── credit_risk/     # Core logic
+│       ├── constants.py # Mapping tables
+│       └── processing.py# Cleaning functions
+├── tests/               # Unit tests for logic
+└── pyproject.toml       # Project config
 ```
 
-## How to Run
+## Run it locally
+1. Clone the repo.
+2. Install dependencies:
+   ```bash
+   pip install .[dev]
+   ```
+3. Run the tests:
+   ```bash
+   pytest
+   ```
+4. Open `notebooks/credit_risk_analysis.ipynb` to see the full analysis.
 
-```bash
-git clone https://github.com/abosameh522/credit-risk-analysis.git
-cd credit-risk-analysis
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-python -m pip install -r requirements.txt
-```
+## Key Results
+Based on a held-out test set of 200 records:
 
-The notebook resolves paths relative to its own folder, so run it from `notebooks/`:
+| Model | Accuracy | Recall | ROC-AUC |
+| :--- | :---: | :---: | :---: |
+| **Random Forest** | **0.770** | 0.333 | **0.755** |
+| Logistic Regression | 0.740 | 0.433 | 0.742 |
+| Decision Tree | 0.735 | 0.267 | 0.689 |
 
-```bash
-cd notebooks
-jupyter nbconvert --to notebook --execute --inplace credit_risk_analysis.ipynb
-```
+**Risk Drivers:**
+- Applicants with accounts "Below 0 DM" had a 39.0% bad credit rate.
+- Loans longer than 24 months had a 44.3% bad credit rate.
+- The overall sample bad credit rate is 30.0% (due to oversampling).
 
-Execution reads `../data/raw/SouthGermanCredit.asc` and writes charts to `../images/` and summary figures to `../portfolio/`.
-
-The final three cells add the simulated screening context, threshold table, and precision–recall plot. They reuse `fitted_models["Random Forest"]` and export the two CSVs under `../reports/`. Assertions check that counts reconcile, review volume and recall decrease with the threshold, and the 0.5 flags match the original classifier predictions.
-
-## Technical Decisions
-
-- **Code table as the source of truth.** Category codes are validated against `codetable.txt` before mapping, so a schema change fails loudly.
-- **No automated outlier removal.** Credit amount and duration distributions are skewed, but large values are plausible loans.
-- **Preprocessing inside the pipeline.** Imputation, encoding, and scaling are fitted per model on training data only, which prevents test leakage.
-- **Stratified split.** Keeps the 70/30 good/bad balance in both partitions.
-- **One test set, simple settings.** The goal is a transparent comparison, not tuned results; the same held-out set is reported for all three models.
+## What I learned
+- **Target Distribution:** I saw how deliberate oversampling in a dataset changes the baseline risk rate.
+- **Metric Choice:** I learned why recall matters more than accuracy when the cost of missing a bad loan is high.
+- **Feature Influence:** I found that checking account status is one of the strongest indicators of risk.
+- **Pipeline Utility:** I used scikit-learn pipelines to prevent data leakage between training and testing.
+- **Interpretability:** I used logistic regression coefficients to explain why certain applicants were flagged as risky.
 
 ## Limitations
+- **Old Data:** The records are from 1973–1975 and may not reflect modern credit behavior.
+- **Small Sample:** 1,000 records is a small set for machine learning.
+- **Missing Data:** There is no income variable in the source data.
 
-- The sample is small, old (1973-1975), and deliberately oversampled; results are not representative of a current population.
-- There is no income variable, and the amount transformation in the source is undocumented.
-- Metrics come from a single split, and the model ranking is taken from that same test set rather than a separate validation set.
-- Category rates and coefficients are associations; correlated features make individual coefficients hard to read in isolation.
-- No calibration, fairness analysis, or model explainability method (SHAP, LIME) is included.
+## Roadmap
+- [ ] Try gradient boosting models like XGBoost.
+- [ ] Implement K-fold cross-validation.
+- [ ] Create a simple CLI tool to score a new applicant.
 
-## Future Improvements
+## License
+MIT
 
-- Implement k-fold cross-validation and use a held-out validation set for model selection before final test evaluation.
-- Tune the classification threshold on validation data to find the optimal balance between review workload and missed bad outcomes.
-- Add isotonic regression or Platt scaling for probability calibration, especially important given the source oversampling.
-- Run a fairness audit if protected attributes become available, checking for disparate impact across demographic groups.
-- Compare against modern gradient-boosting methods (XGBoost, LightGBM) and neural networks to establish a stronger baseline.
-- Extract the notebook's modeling logic into a reusable Python module with unit tests, making it easier to iterate and deploy.
-
-## Author
-
-[Ahmed Sameh](https://github.com/abosameh522)
+## Contact
+Ahmed Sameh - [github.com/ahmed-sameh](https://github.com/ahmed-sameh)
