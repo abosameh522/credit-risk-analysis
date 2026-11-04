@@ -1,0 +1,113 @@
+model,metric,mean,std
+Decision Tree,roc_auc,0.6809642857142857,0.033484018465984394
+Decision Tree,accuracy_05,0.7059999999999998,0.015165750888103076
+Decision Tree,precision_05,0.47553920475659606,0.15863892580735486
+Decision Tree,recall_05,0.18666666666666668,0.09746794344808964
+Decision Tree,f1_05,0.2640079959006233,0.13312562846442313
+Decision Tree,accuracy_tuned,0.492,0.05751086853804243
+Decision Tree,precision_tuned,0.36028073353388973,0.02436643680628876
+Decision Tree,recall_tuned,0.8766666666666666,0.04801620096962645
+Decision Tree,f1_tuned,0.5096696027437815,0.02044618334620918
+Decision Tree,threshold,0.122,0.05848076606885379
+Decision Tree,cost_05,254.0,26.076809620810597
+Decision Tree,cost_tuned,131.2,7.791020472312981
+Decision Tree,cost_per_applicant_05,1.27,0.13038404810405302
+Decision Tree,cost_per_applicant_tuned,0.656,0.038955102361564915
+Decision Tree (balanced),roc_auc,0.7014761904761905,0.030292952676479218
+Decision Tree (balanced),accuracy_05,0.638,0.051307894129461226
+Decision Tree (balanced),precision_05,0.4456884959012619,0.040188077761271285
+Decision Tree (balanced),recall_05,0.8033333333333333,0.0681093891390085
+Decision Tree (balanced),f1_05,0.5718928336884993,0.04026421093928709
+Decision Tree (balanced),accuracy_tuned,0.533,0.050695167422546275
+Decision Tree (balanced),precision_tuned,0.38112120953435047,0.027408210155173
+Decision Tree (balanced),recall_tuned,0.8766666666666667,0.02236067977499791
+Decision Tree (balanced),f1_tuned,0.5307393376591698,0.026882420011908943
+Decision Tree (balanced),threshold,0.26399999999999996,0.12895735729302146
+Decision Tree (balanced),cost_05,119.6,19.16507239746305
+Decision Tree (balanced),cost_tuned,123.0,11.135528725660043
+Decision Tree (balanced),cost_per_applicant_05,0.598,0.09582536198731523
+Decision Tree (balanced),cost_per_applicant_tuned,0.615,0.05567764362830019
+HistGradientBoosting,roc_auc,0.7785952380952381,0.033355264893943325
+HistGradientBoosting,accuracy_05,0.7609999999999999,0.022192341021172166
+HistGradientBoosting,precision_05,0.6403445160750506,0.04846521338754463
+HistGradientBoosting,recall_05,0.4666666666666667,0.09501461875826149
+HistGradientBoosting,f1_05,0.53549903526772,0.07094358928604534
+HistGradientBoosting,accuracy_tuned,0.577,0.09769851585361979
+HistGradientBoosting,precision_tuned,0.41510447657456523,0.06314211664903
+HistGradientBoosting,recall_tuned,0.8833333333333332,0.06123724356957944
+HistGradientBoosting,f1_tuned,0.5607973585102635,0.04961100053392386
+HistGradientBoosting,threshold,0.09,0.06819090848492927
+HistGradientBoosting,cost_05,175.8,26.30019011338131
+HistGradientBoosting,cost_tuned,112.6,13.992855319769443
+HistGradientBoosting,cost_per_applicant_05,0.8789999999999999,0.1315009505669065
+HistGradientBoosting,cost_per_applicant_tuned,0.5630000000000001,0.06996427659884723
+HistGradientBoosting (balanced),roc_auc,0.7732857142857144,0.03513443972621854
+HistGradientBoosting (balanced),accuracy_05,0.737,0.03271085446759228
+HistGradientBoosting (balanced),precision_05,0.5635892514758685,0.059156284548063855
+HistGradientBoosting (balanced),recall_05,0.5966666666666667,0.039791121287711076
+HistGradientBoosting (balanced),f1_05,0.5773336440943133,0.030398165841368775
+HistGradientBoosting (balanced),accuracy_tuned,0.584,0.08756426211645937
+HistGradientBoosting (balanced),precision_tuned,0.416974072140602,0.04980120214624324
+HistGradientBoosting (balanced),recall_tuned,0.8833333333333332,0.10274023338281628
+HistGradientBoosting (balanced),f1_tuned,0.5627187742566906,0.04409456260526014
+HistGradientBoosting (balanced),threshold,0.10800000000000001,0.08438009243891595
+HistGradientBoosting (balanced),cost_05,149.4,10.237187113655782
+HistGradientBoosting (balanced),cost_tuned,111.2,20.510972673181545
+HistGradientBoosting (balanced),cost_per_applicant_05,0.747,0.05118593556827891
+HistGradientBoosting (balanced),cost_per_applicant_tuned,0.5559999999999999,0.10255486336590769
+Logistic Regression,roc_auc,0.777547619047619,0.0387090248578052
+Logistic Regression,accuracy_05,0.765,0.028284271247461926
+Logistic Regression,precision_05,0.6733994076099339,0.07306409308176569
+Logistic Regression,recall_05,0.42000000000000004,0.061689185077739156
+Logistic Regression,f1_05,0.5165361305812647,0.06446664852973459
+Logistic Regression,accuracy_tuned,0.577,0.01955760721560794
+Logistic Regression,precision_tuned,0.40663524043001253,0.010710283671226653
+Logistic Regression,recall_tuned,0.89,0.0693221144769514
+Logistic Regression,f1_tuned,0.557528998977805,0.017159790392632712
+Logistic Regression,threshold,0.176,0.056391488719486745
+Logistic Regression,cost_05,186.2,20.079840636817814
+Logistic Regression,cost_tuned,111.0,15.247950681976906
+Logistic Regression,cost_per_applicant_05,0.931,0.10039920318408907
+Logistic Regression,cost_per_applicant_tuned,0.555,0.07623975340988454
+Logistic Regression (balanced),roc_auc,0.7812142857142857,0.04347010401771153
+Logistic Regression (balanced),accuracy_05,0.708,0.024647515087732472
+Logistic Regression (balanced),precision_05,0.5111955589242135,0.03176161412668077
+Logistic Regression (balanced),recall_05,0.6966666666666667,0.05700877125495691
+Logistic Regression (balanced),f1_05,0.5884971606348365,0.03050379032685366
+Logistic Regression (balanced),accuracy_tuned,0.586,0.015572411502397404
+Logistic Regression (balanced),precision_tuned,0.4105765152194367,0.009364444516182333
+Logistic Regression (balanced),recall_tuned,0.8733333333333333,0.08787617550976044
+Logistic Regression (balanced),f1_tuned,0.5576623441406389,0.022716827330126352
+Logistic Regression (balanced),threshold,0.33799999999999997,0.04868264577855234
+Logistic Regression (balanced),cost_05,131.2,14.720733677368122
+Logistic Regression (balanced),cost_tuned,113.2,20.092287077383702
+Logistic Regression (balanced),cost_per_applicant_05,0.656,0.07360366838684063
+Logistic Regression (balanced),cost_per_applicant_tuned,0.5660000000000001,0.10046143538691851
+Random Forest,roc_auc,0.7814285714285714,0.054548367312113315
+Random Forest,accuracy_05,0.74,0.021794494717703387
+Random Forest,precision_05,0.7398098633392751,0.07893681999108111
+Random Forest,recall_05,0.20666666666666664,0.08628119403696521
+Random Forest,f1_05,0.3162690959679789,0.10191969499566693
+Random Forest,accuracy_tuned,0.5519999999999999,0.04738143096192853
+Random Forest,precision_tuned,0.39402560364748773,0.03136717692928439
+Random Forest,recall_tuned,0.9066666666666666,0.04801620096962645
+Random Forest,f1_tuned,0.5490382041913999,0.03706112427190871
+Random Forest,threshold,0.21400000000000002,0.026076809620810597
+Random Forest,cost_05,242.4,24.774987386475093
+Random Forest,cost_tuned,112.0,18.841443681416774
+Random Forest,cost_per_applicant_05,1.2120000000000002,0.12387493693237549
+Random Forest,cost_per_applicant_tuned,0.56,0.09420721840708385
+Random Forest (balanced),roc_auc,0.7849761904761905,0.05171816886675034
+Random Forest (balanced),accuracy_05,0.716,0.04021815510438042
+Random Forest (balanced),precision_05,0.5216817263765621,0.057233579663271895
+Random Forest (balanced),recall_05,0.6766666666666666,0.10041580220928042
+Random Forest (balanced),f1_05,0.5870958512518843,0.06485798703552688
+Random Forest (balanced),accuracy_tuned,0.5549999999999999,0.035881750236018285
+Random Forest (balanced),precision_tuned,0.39495302698895884,0.01919643649629235
+Random Forest (balanced),recall_tuned,0.9,0.058925565098878946
+Random Forest (balanced),f1_tuned,0.548348953292584,0.02159267758375327
+Random Forest (balanced),threshold,0.338,0.056302753041037
+Random Forest (balanced),cost_05,134.4,28.91885198274648
+Random Forest (balanced),cost_tuned,113.0,13.910427743243556
+Random Forest (balanced),cost_per_applicant_05,0.6719999999999999,0.1445942599137324
+Random Forest (balanced),cost_per_applicant_tuned,0.5650000000000001,0.06955213871621777

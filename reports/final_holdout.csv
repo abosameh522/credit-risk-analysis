@@ -1,0 +1,2 @@
+model,threshold,roc_auc,recall_05,precision_05,f1_05,recall_tuned,precision_tuned,f1_tuned,cost_05,cost_tuned,test_rows,best_params
+Logistic Regression,0.27,0.7522619047619048,0.4166666666666667,0.6756756756756757,0.5154639175257731,0.7333333333333333,0.4583333333333333,0.5641025641025641,187,132,200,{'model__C': np.float64(0.0745934328572655)}
