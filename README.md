@@ -1,205 +1,155 @@
 # Credit Risk Analysis
 
-Analyzing 1,000 historical German credit records (1973-1975) to identify factors associated with bad outcomes and compare three classification models as a held-out benchmark.
+I used a small historical credit dataset to look at which applicant and loan
+attributes are associated with bad outcomes, and to compare several simple
+classifiers. This is a learning project, not a lending decision system.
 
-Built with Python, pandas, scikit-learn, Matplotlib, Seaborn, and Jupyter.
+**The data**
 
-## Problem
+The UCI South German Credit data: 1,000 loans from 1973-1975, 20 predictors,
+and a good/bad outcome (700 good, 300 bad). Bad credits were deliberately
+oversampled, so the 30% bad rate is not a population rate. Credit amounts were
+transformed in the original source with an unpublished method, and there is no
+income field.
 
-Credit records contain applicant and loan attributes collected before a decision, plus the eventual outcome of the contract. A useful analysis answers two questions: which attributes are associated with a bad outcome, and how well a simple model can rank bad outcomes above good ones.
+**What I did**
 
-This repository is a case study on a small historical sample (1973–1975). It produces descriptive findings and a benchmark comparison, not a decision system ready for lending use.
+- Checked category codes against `codetable.txt` before mapping, so unexpected
+  codes fail loudly instead of passing through silently.
+- Kept outliers, since large loans and long durations are plausible.
+- Put imputation, one-hot encoding, and scaling inside every model pipeline.
+  Class weights also live inside the pipeline, so nothing is fitted outside the
+  training fold.
+- Compared logistic regression, a decision tree, a random forest, and
+  `HistGradientBoosting`, each with and without `class_weight="balanced"`.
+- Used nested cross-validation: 5 outer stratified folds on the 800 training
+  rows, with 3-fold `RandomizedSearchCV` (20 candidates) inside each outer fold.
+  All random states are 42.
+- Chose the decision threshold on inner out-of-fold predictions, minimising the
+  German Credit cost matrix: a bad applicant predicted good costs 5, a false
+  alarm costs 1.
+- Left the 200-row test set untouched until one final check. No hyperparameter
+  or threshold was tuned on it.
 
-## Decision Context
+**What stood out**
 
-The model serves as a decision-support benchmark for identifying applications that may need additional review. A score above a screening threshold would flag an application for review, not determine approval or rejection.
+Checking account status separates outcomes most clearly: records with no
+checking account had a 49.3% bad rate, while accounts at 200+ DM had 11.7%.
+Contracts longer than 24 months had a 44.3% bad rate versus 25.7% for shorter
+ones, and the highest credit-amount quartile reached 42.0%. These are
+associations in this sample, not causal effects.
 
-A false positive means a good applicant is flagged as risky, adding unnecessary manual review and possible delay. A false negative means a risky applicant is classified as low risk and missed by the screening step.
+**Results**
 
-This is a simulated use case for the historical labels, not a deployed lending system. No applications were reviewed through this project, and no monetary cost or lending impact is calculated.
+Nested cross-validation on the 800 training rows, mean +/- standard deviation
+across 5 outer folds. Each outer test fold contains 160 applicants. Cost is the
+total per fold; lower is better.
 
-## Dataset
-
-Source: [UCI South German Credit](https://archive.ics.uci.edu/dataset/573/south+german+credit+update), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The raw data and code table are committed under `data/raw/`.
-
-| Property | Value |
-| --- | --- |
-| Records | 1,000 |
-| Columns | 21 (20 predictors + outcome) |
-| Continuous fields | `duration_months`, `credit_amount_dm`, `age_years` |
-| Coded categorical fields | 17 |
-| Outcome balance | 700 good / 300 bad |
-| Bad-outcome rate | 30% |
-| Period | 1973–1975 |
-
-Selected predictors include `checking_status`, `duration_months`, `credit_history`, `credit_amount_dm`, `savings`, and `age_years`. For evaluation, bad credit is the positive class (`bad_credit = 1`).
-
-Two properties of the source shape the interpretation: bad credits were deliberately oversampled, so 30% is not a population rate, and the credit amounts were transformed in the original data with an unpublished method. The data contain no income field.
-
-## Workflow
-
-```mermaid
-flowchart LR
-    A[South German Credit] --> B[Cleaning and code mapping]
-    B --> C[Exploratory analysis]
-    C --> D[Preprocessing]
-    D --> E[Model training]
-    E --> F[Evaluation]
-    F --> G[Interpretation]
-```
-
-## Data Preparation
-
-- Coded category values are checked against `codetable.txt` before any mapping, and unexpected codes raise an error rather than passing through silently.
-- Fields are renamed to readable names and category codes are converted to labels. No rows are removed.
-- Outliers are intentionally kept; large loans and long durations are plausible and could carry information.
-- The 20 predictors are used as-is, and the target is separated out.
-- An 80/20 stratified split keeps the class ratio in both sets.
-- Median imputation, most-frequent imputation, one-hot encoding, and scaling are fitted inside the model pipeline, so preprocessing never sees the test data.
-
-## Exploratory Analysis
-
-Outcome balance:
-
-![Historical credit outcomes](images/credit_outcomes.png)
-
-300 of 1,000 contracts ended badly. With a 70/30 split, accuracy alone is an unreliable measure and the analysis leans on ROC-AUC, recall, and precision.
-
-Risk by checking-account status:
-
-![Bad credit rate by checking account status](images/checking_risk.png)
-
-Checking status separates outcomes more than any other single field. Records with no checking account had the highest bad rate (49.3%); accounts at 200+ DM had the lowest (11.7%).
-
-Risk by credit amount:
-
-![Bad credit rate by credit amount quartile](images/amount_risk.png)
-
-The top amount quartile had a 42.0% bad rate, noticeably above the other three. The relationships described here are observed associations in the historical sample.
-
-## Modeling and Evaluation
-
-Three classifiers were trained with simple settings and evaluated once on a held-out set of 200 records, 60 of which are bad outcomes. The decision threshold is 0.5.
-
-| Model | Accuracy | Precision | Recall | F1 | ROC-AUC |
+| Model | ROC-AUC | Recall @0.5 | Recall @tuned | Cost @tuned | Threshold |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Random Forest | 0.770 | 0.769 | 0.333 | 0.465 | 0.755 |
-| Logistic Regression | 0.740 | 0.591 | 0.433 | 0.500 | 0.742 |
-| Decision Tree | 0.735 | 0.640 | 0.267 | 0.376 | 0.689 |
+| Logistic Regression | 0.778 +/- 0.039 | 0.420 +/- 0.062 | 0.890 +/- 0.069 | 111.0 +/- 15.2 | 0.176 +/- 0.056 |
+| HistGradientBoosting (balanced) | 0.773 +/- 0.035 | 0.597 +/- 0.040 | 0.883 +/- 0.103 | 111.2 +/- 20.5 | 0.108 +/- 0.084 |
+| Random Forest | 0.781 +/- 0.055 | 0.207 +/- 0.086 | 0.907 +/- 0.048 | 112.0 +/- 18.8 | 0.214 +/- 0.026 |
+| HistGradientBoosting | 0.779 +/- 0.033 | 0.467 +/- 0.095 | 0.883 +/- 0.061 | 112.6 +/- 14.0 | 0.090 +/- 0.068 |
+| Random Forest (balanced) | 0.785 +/- 0.052 | 0.677 +/- 0.100 | 0.900 +/- 0.059 | 113.0 +/- 13.9 | 0.338 +/- 0.056 |
+| Logistic Regression (balanced) | 0.781 +/- 0.043 | 0.697 +/- 0.057 | 0.873 +/- 0.088 | 113.2 +/- 20.1 | 0.338 +/- 0.049 |
+| Decision Tree (balanced) | 0.701 +/- 0.030 | 0.803 +/- 0.068 | 0.877 +/- 0.022 | 123.0 +/- 11.1 | 0.264 +/- 0.129 |
+| Decision Tree | 0.681 +/- 0.033 | 0.187 +/- 0.097 | 0.877 +/- 0.048 | 131.2 +/- 7.8 | 0.122 +/- 0.058 |
 
-Random Forest ranks best by ROC-AUC but at the 0.5 threshold it catches only 20 of the 60 bad outcomes, which is a low recall. Logistic Regression catches more (highest recall and F1) at the cost of precision. The trade-off matters because a false positive triggers an unnecessary review, while a false negative lets a bad outcome through.
+The six strongest models land between 111 and 113 cost units, well inside one
+standard deviation of each other. I would not claim a winner. Logistic
+regression has the lowest mean cost, but the gap to the random forest and
+gradient boosting is not meaningful at this sample size.
 
-![Held-out model comparison](images/model_comparison.png)
+At the default 0.5 threshold, recall for the bad class is poor for the
+unweighted tree models. Tuning the threshold for the 5:1 cost raises recall to
+roughly 0.87-0.91 for every model, at the cost of lower precision. The useful
+lever here is the threshold, not the classifier.
 
-![Confusion matrix — top model](images/confusion_matrix.png)
+Gradient boosting did not improve on logistic regression: `HistGradientBoosting`
+had ROC-AUC 0.779 +/- 0.033 and cost 112.6 +/- 14.0, against 0.778 +/- 0.039 and
+111.0 +/- 15.2 for logistic regression. The balanced variant was also within
+noise. I kept the simpler model.
 
-## Threshold Analysis
+Class-weight effect, reported as balanced minus base (mean +/- std across the
+same outer folds; negative cost means lower cost):
 
-The existing Random Forest supplies bad-credit probabilities for the same 200 test records (60 bad outcomes). The table flags scores **greater than or equal to** each threshold. Training settings, labels, and the original 0.5 evaluation are unchanged.
+| Family | Recall @0.5 | Recall @tuned | Cost @tuned |
+| --- | ---: | ---: | ---: |
+| Decision Tree | +0.617 +/- 0.124 | +0.000 +/- 0.033 | -8.2 +/- 8.8 |
+| Random Forest | +0.470 +/- 0.144 | -0.007 +/- 0.049 | +1.0 +/- 7.0 |
+| Logistic Regression | +0.277 +/- 0.055 | -0.017 +/- 0.067 | +2.2 +/- 13.6 |
+| HistGradientBoosting | +0.130 +/- 0.087 | +0.000 +/- 0.077 | -1.4 +/- 13.8 |
 
-| Threshold | Flagged for review | Bad outcomes captured | Good applicants flagged (FP) | Bad outcomes missed (FN) | Precision | Recall | F1 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0.20 | 150 | 55 | 95 | 5 | 0.367 | 0.917 | 0.524 |
-| 0.30 | 98 | 45 | 53 | 15 | 0.459 | 0.750 | 0.570 |
-| 0.40 | 55 | 32 | 23 | 28 | 0.582 | 0.533 | 0.557 |
-| 0.50 | 26 | 20 | 6 | 40 | 0.769 | 0.333 | 0.465 |
-| 0.60 | 4 | 4 | 0 | 56 | 1.000 | 0.067 | 0.125 |
-| 0.70 | 1 | 1 | 0 | 59 | 1.000 | 0.017 | 0.033 |
+Balanced weights do what they are supposed to at a fixed 0.5 threshold: recall
+for the bad class rises by 0.13 to 0.62, while precision falls by 0.03 to 0.22.
+Once the threshold is tuned for cost, the recall advantage disappears, and
+every cost change is within one standard deviation. On this dataset, class
+weights mostly move the operating point that threshold tuning already controls.
 
-![Random Forest precision–recall curve and threshold trade-off](images/threshold_analysis.png)
+**Final check on the untouched test set**
 
-Lowering the threshold from 0.50 to 0.30 captures 25 more bad outcomes, but flags 47 more good applicants and increases the review queue from 26 to 98. At 0.60, precision is 1.000 based on just four flags; it misses 56 of 60 bad outcomes. That small queue is not evidence of a reliable screening policy.
+I fitted the selected family (logistic regression) on the 800 training rows,
+chose its threshold from inner out-of-fold predictions, and evaluated the
+200-row test set once:
 
-Average precision is **0.6314** on this test set; the horizontal reference is its 0.30 bad-outcome prevalence. Average precision summarizes the precision–recall curve using recall increments, rather than selecting a particular threshold.
+| ROC-AUC | Recall @0.5 | Recall @0.27 | Cost @0.5 | Cost @0.27 |
+| ---: | ---: | ---: | ---: | ---: |
+| 0.752 | 0.417 | 0.733 | 187 | 132 |
 
-The notebook writes full-precision counts and metrics to `reports/threshold_analysis.csv` and test scores to `reports/screening_scores.csv`. Precision is `TP / (TP + FP)`, recall is `TP / 60`, and F1 is their harmonic mean. These are descriptive test-set comparisons: no threshold is chosen or deployed. A review policy would need separate validation data, review capacity, and explicit error costs; source oversampling also limits how these probabilities transfer to a different population.
+The cost-based threshold reduced total cost from 187 to 132 (about 29%) on the
+same 200 applicants, while recall rose from 0.417 to 0.733. This is a single
+check, not a second tuning round.
 
-## Explainability
+**Feature importance**
 
-Interpretation uses the logistic regression coefficients. Positive coefficients raise predicted risk, negative coefficients lower it, and the values are conditional on the other features after encoding and scaling.
+![Permutation importance for logistic regression](images/feature_importance.png)
 
-![Selected logistic regression coefficients](images/feature_coefficients.png)
+Permutation importance for the selected model, averaged over the outer test
+folds (mean decrease in ROC-AUC when a feature is shuffled): checking status
+0.097, duration 0.025, credit history 0.023, savings 0.019, purpose 0.014,
+credit amount 0.011. Checking status dominates. Correlated features share
+credit, so these values describe predictive contribution rather than isolated
+causes.
 
-The largest effects come from checking status (no account and below 0 DM increase risk, 200+ DM decreases it), longer duration, and several credit-history categories. Correlated features share weight, so these coefficients describe direction and relative size rather than isolated effects.
+**Limitations**
 
-## Key Findings
+- The sample is small, old, and deliberately oversampled; it is not
+  representative of a current population.
+- There is no income variable, and the amount transformation is undocumented.
+- Fold-to-fold spread is wide, and differences among the top models are small
+  relative to that spread.
+- The 5:1 cost matrix is an assumption, not a measured business cost.
+- No probability calibration, fairness audit, or SHAP analysis.
+- Permutation importance is affected by correlated predictors.
 
-- Checking balances below 0 DM had a 39.0% bad rate versus 11.7% for balances at 200+ DM.
-- Contracts longer than 24 months had a 44.3% bad rate versus 25.7% for shorter contracts.
-- Above-median credit amounts had a 32.2% bad rate versus 27.8% for the lower half.
-- The highest credit-amount quartile reached a 42.0% bad rate.
-- The 30% bad rate reflects deliberate oversampling and should not be read as a current rate.
-
-## Project Structure
-
-```text
-credit-risk-analysis/
-├── notebooks/
-│   └── credit_risk_analysis.ipynb   # Cleaning, EDA, modeling, evaluation
-├── data/raw/
-│   ├── SouthGermanCredit.asc        # Source data (UCI ML Repository, CC BY 4.0)
-│   └── codetable.txt                # Category definitions
-├── images/                          # Charts written by the notebook
-├── portfolio/                       # Summary figures for quick overview
-│   ├── credit_risk_overview.png
-│   ├── key_insights.png
-│   └── model_results.png
-├── reports/
-│   ├── threshold_analysis.csv        # Threshold counts and metrics
-│   └── screening_scores.csv          # Test labels and Random Forest scores
-├── requirements.txt
-├── pyproject.toml                   # Ruff and pytest configuration
-├── .pre-commit-config.yaml          # Pre-commit hooks
-├── LICENSE
-└── README.md
-```
-
-## How to Run
+**Run it**
 
 ```bash
-git clone https://github.com/abosameh522/credit-risk-analysis.git
-cd credit-risk-analysis
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-python -m pip install -r requirements.txt
+source .venv/bin/activate
+pip install -r requirements.txt
+python src/nested_cv.py
 ```
 
-The notebook resolves paths relative to its own folder, so run it from `notebooks/`:
+`src/cross_validation.py` runs the simpler 5-fold comparison without tuning.
+The notebook contains the cleaning, exploratory analysis, original single-split
+comparison, threshold table, and figures:
 
 ```bash
 cd notebooks
 jupyter nbconvert --to notebook --execute --inplace credit_risk_analysis.ipynb
 ```
 
-Execution reads `../data/raw/SouthGermanCredit.asc` and writes charts to `../images/` and summary figures to `../portfolio/`.
+The nested run writes per-fold and summary results, the class-weight comparison,
+the final test check, and feature importances under `reports/`, plus
+`images/feature_importance.png`.
 
-The final three cells add the simulated screening context, threshold table, and precision–recall plot. They reuse `fitted_models["Random Forest"]` and export the two CSVs under `../reports/`. Assertions check that counts reconcile, review volume and recall decrease with the threshold, and the 0.5 flags match the original classifier predictions.
+**Files**
 
-## Technical Decisions
-
-- **Code table as the source of truth.** Category codes are validated against `codetable.txt` before mapping, so a schema change fails loudly.
-- **No automated outlier removal.** Credit amount and duration distributions are skewed, but large values are plausible loans.
-- **Preprocessing inside the pipeline.** Imputation, encoding, and scaling are fitted per model on training data only, which prevents test leakage.
-- **Stratified split.** Keeps the 70/30 good/bad balance in both partitions.
-- **One test set, simple settings.** The goal is a transparent comparison, not tuned results; the same held-out set is reported for all three models.
-
-## Limitations
-
-- The sample is small, old (1973-1975), and deliberately oversampled; results are not representative of a current population.
-- There is no income variable, and the amount transformation in the source is undocumented.
-- Metrics come from a single split, and the model ranking is taken from that same test set rather than a separate validation set.
-- Category rates and coefficients are associations; correlated features make individual coefficients hard to read in isolation.
-- No calibration, fairness analysis, or model explainability method (SHAP, LIME) is included.
-
-## Future Improvements
-
-- Implement k-fold cross-validation and use a held-out validation set for model selection before final test evaluation.
-- Tune the classification threshold on validation data to find the optimal balance between review workload and missed bad outcomes.
-- Add isotonic regression or Platt scaling for probability calibration, especially important given the source oversampling.
-- Run a fairness audit if protected attributes become available, checking for disparate impact across demographic groups.
-- Compare against modern gradient-boosting methods (XGBoost, LightGBM) and neural networks to establish a stronger baseline.
-- Extract the notebook's modeling logic into a reusable Python module with unit tests, making it easier to iterate and deploy.
-
-## Author
-
-[Ahmed Sameh](https://github.com/abosameh522)
+- `notebooks/credit_risk_analysis.ipynb` - full analysis and figures
+- `src/nested_cv.py` - nested CV, cost-based thresholds, importance
+- `src/cross_validation.py` - simple 5-fold comparison
+- `data/raw/` - source data and category code table
+- `reports/` - model outputs
+- `images/`, `portfolio/` - charts
